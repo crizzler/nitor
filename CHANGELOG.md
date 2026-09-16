@@ -33,6 +33,17 @@ All notable changes to this project are documented here. The format follows
 - The permission classifier recognises the failure liquidctl actually reports when no udev rule is
   installed (`The device has no langid (permission issue, ...)`). Previously that fell through to the
   generic USB branch and told the user to replug the controller instead of showing the udev rule.
+- A refused device listing was reported as an empty one, so the permission message was immediately
+  replaced by "No compatible NZXT controller found" and the udev advice disappeared. A failed
+  listing now reports only the failure.
+- The status line could show the bare word `not-found`, which is systemctl's answer for a unit that
+  does not exist; those answers are translated now, and the autostart check no longer talks over an
+  error, since it runs moments after discovery.
+- Closing the window while a hardware call was in flight destroyed a running worker thread and
+  aborted the process. Shutdown now waits for the call to finish, bounded by the backend's own
+  subprocess timeout.
+- The recovery card no longer shows a "no controller found" message at the same time as saying the
+  controller was found but denied, and the udev instructions have one source instead of two.
 - Three interface defects found by Qt 6's QML linter, which the Qt 5 binary that shadows it did not
   report: a status dot sized directly inside a layout it is managed by, cross-scope property access
   in the colour wheel, and typography read through a property the tooling cannot see. All 171
