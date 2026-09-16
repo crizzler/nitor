@@ -27,6 +27,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- The wheel contained no QML at all, so an installed Nitor could not open a window; `package-data`
+  listed the icons and the desktop files but not the interface. This was only visible from an
+  installation, because a source checkout loads the QML straight from the tree. `tests/test_packaging.py`
+  now checks that every runtime file is covered by `package-data`, and CI installs the built package
+  into a clean environment and runs the self-test against it rather than only testing the checkout.
 - The startup unit now quotes values that contain whitespace. Without this, a checkout under a path
   such as `Other Projects/nitor` produced a unit whose `PYTHONPATH` was silently truncated by
   systemd, so login restoration could never import Nitor.
@@ -53,12 +58,15 @@ All notable changes to this project are documented here. The format follows
 
 ### Notes
 
-- Physical LED output has not yet been verified on the development hardware because `liquidctl` and
-  its udev rules are not installed on that machine yet. The tested/untested table in
-  [`docs/hardware-notes.md`](docs/hardware-notes.md) states exactly what has and has not been
-  observed, and it is kept honest until the hardware step is completed. The real backend path has
-  been exercised as far as it can be without root: version detection works and the permission
-  failure is classified correctly (see [`docs/environment.md`](docs/environment.md)).
+- The controllers are now reached on real hardware: both NZXT devices are identified by name, their
+  channels and accessories are reported (the RGB & Fan Controller exposes `led1`, `led2` and `sync`;
+  the Kraken Z exposes `external` only), and a Gigabyte RGB board on the same machine is correctly
+  reported as unsupported rather than offered fake controls.
+- Applying a colour to real LEDs has **not** been confirmed by eye. The controllers accept the writes
+  and `liquidctl` reports success, including through Nitor's own `--apply-saved` path, but the
+  tested/untested table in [`docs/hardware-notes.md`](docs/hardware-notes.md) deliberately keeps
+  "the device accepted the command" separate from "the LEDs lit up" until someone watches them.
+  Persistence across a power cycle, and the `systemd --user` unit itself, are likewise still untested.
 
 ## [0.1.0] - 2026-09-16
 

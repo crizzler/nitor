@@ -69,10 +69,35 @@ python -m venv --system-site-packages ~/.local/share/nitor/venv
 ~/.local/share/nitor/venv/bin/pip install --no-deps .
 ```
 
-The console script then lives in `~/.local/share/nitor/venv/bin/nitor`, which can be launched
-directly or by a desktop entry that points at it. `--no-deps` is deliberate: PySide6 comes from the
-system package, and `liquidctl` stays the distribution's job so that its udev rules are installed in
-the normal place.
+The console script then lives in `~/.local/share/nitor/venv/bin/nitor`. `--no-deps` is deliberate:
+PySide6 comes from the system package, and `liquidctl` stays the distribution's job so that its udev
+rules are installed in the normal place.
+
+A virtual environment is not on `PATH`, and installing the package that way does not put anything in
+`~/.local/share/applications` either, so add the two pieces of desktop integration by hand:
+
+```bash
+# Let the desktop entry's `Exec=nitor` and your shell find it
+ln -sf ~/.local/share/nitor/venv/bin/nitor ~/.local/bin/nitor
+
+# Launcher entry, AppStream metadata and icons, from a checkout
+install -Dm644 src/nitor/data/io.github.crizzler.Nitor.desktop \
+  ~/.local/share/applications/io.github.crizzler.Nitor.desktop
+install -Dm644 src/nitor/data/io.github.crizzler.Nitor.metainfo.xml \
+  ~/.local/share/metainfo/io.github.crizzler.Nitor.metainfo.xml
+cp -r src/nitor/assets/icons/hicolor ~/.local/share/icons/
+install -Dm644 src/nitor/assets/icon.svg \
+  ~/.local/share/icons/hicolor/scalable/apps/io.github.crizzler.Nitor.svg
+
+# Let KDE notice, and check the entry is well-formed
+desktop-file-validate ~/.local/share/applications/io.github.crizzler.Nitor.desktop
+update-desktop-database ~/.local/share/applications
+kbuildsycoca6 --noincremental
+```
+
+Omitting the icon copy is the usual reason a userspace install shows a generic question-mark icon in
+the launcher: the desktop entry names `io.github.crizzler.Nitor`, so that is the file name the icon
+theme looks for.
 
 ## Publishing to the AUR
 

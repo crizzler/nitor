@@ -123,17 +123,18 @@ exactly the number of slots the selected effect accepts.
 
 | Item                                                    | State |
 | :------------------------------------------------------ | :---- |
-| Backend version detection                               | **Verified** on this machine with liquidctl 1.16.0 (the version Arch ships) |
-| Device enumeration and product strings                  | Attempted here: enumeration is refused until the udev rule exists, so the product strings remain unverified. Descriptions and drivers come from upstream source |
-| Permission failure detected and explained               | **Verified** here: `liquidctl list` fails with the `no langid` error and Nitor reports "connected but access denied" with the udev hint |
-| Channel list and accessory detection via `initialize`    | Not yet run — blocked on the udev rules |
-| Setting a fixed colour on `led1` / `led2` / `sync`       | Not yet tested — blocked on the udev rules |
-| Setting a fixed colour on the Kraken `external` channel  | Not yet tested — blocked on the udev rules |
+| Backend version detection                               | **Verified** with liquidctl 1.16.0 on this machine |
+| Device enumeration and product strings                  | **Verified** here: three devices are reported, including both NZXT controllers by name; the Gigabyte RGB Fusion board on the same machine is correctly identified as an unsupported model and is offered no controls |
+| Channel list and accessory detection via `initialize`    | **Verified** here. The controller reports `led1` (8 LEDs: 1× AER RGB 2 140 mm), `led2` (24: 3× 140 mm) and `sync` (32); the Kraken reports `external` (24: 3× AER RGB 2 120 mm). Firmware 1.13.0 and 5.11.0 |
+| Unprivileged access after the udev rules                | **Verified**: every channel reports `access: yes` with no root, using the rules the liquidctl package installs |
+| Permission failure detected and explained               | **Verified** here, before the rules were present: `liquidctl list` fails with the `no langid` error and Nitor reports "connected but access denied" with the udev hint |
+| Setting a fixed colour on `led1`, `led2`, `sync` and `external` | Commands were **accepted by the controllers with no error** (liquidctl reported success), including through Nitor's own `--apply-saved` path. **Not visually confirmed** yet: nobody has watched the fans while the colour was applied, so the claim rests on the controllers accepting the writes rather than on an observation |
+| Channel-to-physical-fan mapping                         | Not recorded yet — it needs someone watching which fans change |
 | Lighting persistence across S5/reboot                   | Not yet tested (upstream states settings persist while the device keeps power) |
-| Unprivileged writes after udev rules                    | Not yet tested |
+| The `systemd --user` unit itself                        | Not yet tested; `--apply-saved`, which is what it runs, is verified above |
 
-This table is updated as soon as the hardware step in the checklist below is completed. Nothing is
-advertised as tested until it has actually been observed.
+This table is updated as the checklist below is completed. Nothing is advertised as tested until it has
+actually been observed, and "the device accepted the command" is kept distinct from "the LEDs lit up".
 
 ## Hardware verification checklist
 

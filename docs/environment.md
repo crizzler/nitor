@@ -37,22 +37,22 @@ Bus 001 Device 009: ID 1e71:3008 NZXT NZXT KrakenZ Device
 
 | Check                                        | Result                                              |
 | :------------------------------------------- | :-------------------------------------------------- |
-| `liquidctl` on `PATH`                        | **not installed**                                   |
+| `liquidctl` on `PATH`                        | **installed**: 1.16.0 (`liquidctl 1.16.0-1`)         |
 | `liquidctl` in repos                         | `extra/liquidctl 1.16.0-1` (also `cachyos-extra-v3`) |
-| `/usr/lib/udev/rules.d/71-liquidctl.rules`   | absent                                              |
-| `/etc/udev/rules.d/71-liquidctl.rules`       | absent                                              |
-| `/dev/hidraw*` permissions                   | `crw------- root root` — **root-only**              |
+| `/usr/lib/udev/rules.d/71-liquidctl.rules`   | **present**, shipped by that package                |
+| `/etc/udev/rules.d/71-liquidctl.rules`       | absent, and not needed                              |
+| `/dev/hidraw*` permissions                   | granted to the console user by that rule             |
 
-**Consequence:** unprivileged HID access to the controllers is not possible yet, so the physical
-LED milestone cannot be completed until `liquidctl` (which ships `71-liquidctl.rules`) is installed
-by a user with sudo rights. Everything else in the project is developed against the mock backend,
-which exercises the same code paths as the real backend.
+**Consequence:** the controllers are reachable without root, so the hardware steps can be run. This
+was the blocker described earlier in this document, and it has since been removed by installing the
+packaged `liquidctl`.
 
 ## Backend validation without root
 
-To validate the real backend path without installing anything system-wide, liquidctl 1.16.0 (the
-exact version in the repositories) was installed into a throwaway virtual environment and Nitor was
-pointed at it by putting that environment's `bin` directory first on `PATH`:
+While the controllers were still unreachable, the failure paths were validated without installing
+anything system-wide: liquidctl 1.16.0 (the exact version in the repositories) was installed into a
+throwaway virtual environment and Nitor was pointed at it by putting that environment's `bin`
+directory first on `PATH`:
 
 ```bash
 python3 -m venv /tmp/lcvenv

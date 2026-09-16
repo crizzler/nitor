@@ -56,6 +56,19 @@ jobs:
           PYTHONPATH: src
         run: python -m nitor --backend mock --self-test
 
+      - name: Smoke test the installed package
+        # Deliberately does not run from the checkout. Packaging mistakes are invisible there, and
+        # one shipped a wheel whose interface consisted of nothing but viewmodel.py: the window
+        # could not open at all. Building and running the installed package is the only way to see
+        # that class of failure.
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          python -m venv --system-site-packages /tmp/installed
+          /tmp/installed/bin/pip install --quiet --no-deps .
+          cd /tmp
+          /tmp/installed/bin/nitor --backend mock --self-test
+
   arch:
     name: Arch packaging
     runs-on: ubuntu-latest

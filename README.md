@@ -44,20 +44,22 @@ firmware and LCD commands that must all be refused.
 
 ## Project status
 
-Version 0.1.0, in development, **not yet verified on physical hardware**. Here is the honest state of
-things:
+Version 0.1.0, in development. The controllers are now reached on real hardware; the honest state of
+things is:
 
 | Area | State |
 | :--- | :--- |
 | Device detection, capability model, effect tables | Implemented, read from the upstream liquidctl drivers, covered by tests |
 | Interface, settings, diagnostics, startup service | Implemented; exercised in CI against the mock backend |
 | Backend detection and permission handling | **Verified against the real liquidctl** (1.16.0): the version is read from real output, and the failure a user meets without a udev rule is classified as a permission problem rather than a hardware one |
-| Changing a real LED's colour | **Not yet tested.** The development machine has no udev rules installed, and installing them needs root: without them liquidctl cannot even enumerate the controllers |
+| Detecting the controllers, their channels and their accessories | **Verified on real hardware**: both NZXT controllers are identified by name, `led1`/`led2`/`sync` and the Kraken's `external` are reported with their LED and accessory counts, and a Gigabyte RGB board on the same machine is correctly reported as unsupported |
+| Applying lighting to real LEDs | The controllers accept the writes with no error, including through the `--apply-saved` path. **Not yet confirmed by eye**, so it is not claimed as observed |
 | Effects on real LEDs, persistence across a power cycle | Not yet tested |
 
-The tested/untested table in [`docs/hardware-notes.md`](docs/hardware-notes.md) is updated as soon as
-the hardware steps in this repository's own checklist are completed. Nothing is described as tested
-before it has been observed.
+The tested/untested table in [`docs/hardware-notes.md`](docs/hardware-notes.md) is updated as the
+hardware steps in this repository's own checklist are completed. Nothing is described as tested
+before it has been observed, and "the device accepted the command" is kept distinct from "the LEDs
+lit up".
 
 ## Hardware support
 

@@ -43,7 +43,10 @@ include-package-data = true
 where = ["src"]
 
 [tool.setuptools.package-data]
-nitor = ["assets/*.svg", "assets/icons/**/*.png", "data/*"]
+# The interface is data rather than Python, so it must be listed here or the wheel ships an
+# application with no window. That mistake is invisible from a source checkout, where the QML is
+# loaded straight from the tree; tests/test_packaging.py and the CI smoke test both guard it.
+nitor = ["assets/*.svg", "assets/icons/**/*.png", "data/*", "ui/**/*.qml"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
