@@ -51,7 +51,8 @@ things:
 | :--- | :--- |
 | Device detection, capability model, effect tables | Implemented, read from the upstream liquidctl drivers, covered by tests |
 | Interface, settings, diagnostics, startup service | Implemented; exercised in CI against the mock backend |
-| Changing a real LED's colour | **Not yet tested.** The development machine does not have `liquidctl` and its udev rules installed yet, so unprivileged HID access is not available |
+| Backend detection and permission handling | **Verified against the real liquidctl** (1.16.0): the version is read from real output, and the failure a user meets without a udev rule is classified as a permission problem rather than a hardware one |
+| Changing a real LED's colour | **Not yet tested.** The development machine has no udev rules installed, and installing them needs root: without them liquidctl cannot even enumerate the controllers |
 | Effects on real LEDs, persistence across a power cycle | Not yet tested |
 
 The tested/untested table in [`docs/hardware-notes.md`](docs/hardware-notes.md) is updated as soon as
