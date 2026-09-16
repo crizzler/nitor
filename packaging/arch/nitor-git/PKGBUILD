@@ -1,0 +1,65 @@
+# Maintainer: Nitor contributors <https://github.com/crizzler/nitor/issues>
+#
+# Builds from trunk, so it works before any release tag exists.
+#
+#   cd packaging/arch/nitor-git
+#   makepkg -si
+#
+# A VCS package cannot verify a source checksum: the source is a moving branch by definition. That
+# is why sha256sums=('SKIP') appears here, and why a PKGBUILD scanner will mention it.
+pkgname=nitor-git
+pkgver=r1.0000000
+pkgrel=1
+pkgdesc='Control NZXT LED lighting on Linux without NZXT CAM (development version)'
+arch=('any')
+url='https://github.com/crizzler/nitor'
+license=('MIT')
+depends=('python' 'pyside6' 'liquidctl')
+optdepends=('qqc2-desktop-style: use the native Plasma look and feel')
+makedepends=('git' 'python-build' 'python-installer' 'python-wheel' 'python-setuptools')
+checkdepends=('python-pytest')
+provides=('nitor')
+conflicts=('nitor')
+source=("$pkgname::git+$url.git")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+  printf 'r%s.%s' "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+build() {
+  cd "$pkgname"
+  python -m build --wheel --no-isolation
+}
+
+check() {
+  cd "$pkgname"
+  PYTHONPATH=src QT_QPA_PLATFORM=offscreen python -m pytest -q
+}
+
+package() {
+  cd "$pkgname"
+  python -m installer --destdir="$pkgdir" dist/*.whl
+
+  install -Dm644 src/nitor/data/io.github.crizzler.Nitor.desktop \
+    "$pkgdir/usr/share/applications/io.github.crizzler.Nitor.desktop"
+  install -Dm644 src/nitor/data/io.github.crizzler.Nitor.metainfo.xml \
+    "$pkgdir/usr/share/metainfo/io.github.crizzler.Nitor.metainfo.xml"
+
+  install -Dm644 src/nitor/assets/icon.svg \
+    "$pkgdir/usr/share/icons/hicolor/scalable/apps/io.github.crizzler.Nitor.svg"
+
+  local size
+  for size in 16 22 24 32 48 64 96 128 256 512; do
+    install -Dm644 "src/nitor/assets/icons/hicolor/${size}x${size}/apps/io.github.crizzler.Nitor.png" \
+      "$pkgdir/usr/share/icons/hicolor/${size}x${size}/apps/io.github.crizzler.Nitor.png"
+  done
+
+  sed -e 's|@@EXEC_START@@|/usr/bin/nitor|' -e '/@@ENVIRONMENT@@/d' \
+    src/nitor/data/nitor.service > nitor.service
+  install -Dm644 nitor.service "$pkgdir/usr/lib/systemd/user/nitor.service"
+
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}

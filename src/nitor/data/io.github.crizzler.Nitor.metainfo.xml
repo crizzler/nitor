@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.crizzler.Nitor</id>
+
+  <name>Nitor</name>
+  <summary>Control NZXT LED lighting without NZXT CAM</summary>
+
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+
+  <description>
+    <p>
+      Nitor controls the RGB and LED lighting of supported NZXT controllers on Linux: it can set a
+      colour, choose an effect from the ones the hardware actually supports, and pick which LED
+      channel to drive.
+    </p>
+    <p>
+      It is deliberately small. Nitor only ever sets LED colours, and it never changes pump speed,
+      fan speed, cooling curves, thermal thresholds or firmware. Those commands are refused in code
+      rather than merely being left out of the interface.
+    </p>
+    <p>
+      Nitor talks to the hardware through liquidctl, which provides the safe, documented protocol
+      support and the udev rules that allow unprivileged access to the devices.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">io.github.crizzler.Nitor.desktop</launchable>
+
+  <url type="homepage">https://github.com/crizzler/nitor</url>
+  <url type="bugtracker">https://github.com/crizzler/nitor/issues</url>
+  <url type="vcs-browser">https://github.com/crizzler/nitor</url>
+
+  <developer id="io.github.crizzler">
+    <name>Nitor contributors</name>
+  </developer>
+
+  <categories>
+    <category>Settings</category>
+    <category>HardwareSettings</category>
+  </categories>
+
+  <keywords>
+    <keyword>NZXT</keyword>
+    <keyword>RGB</keyword>
+    <keyword>LED</keyword>
+    <keyword>lighting</keyword>
+    <keyword>Kraken</keyword>
+    <keyword>fan controller</keyword>
+  </keywords>
+
+  <screenshots>
+    <screenshot type="default">
+      <caption>The lighting controls</caption>
+      <image type="source">https://raw.githubusercontent.com/crizzler/nitor/main/docs/screenshots/lighting.png</image>
+    </screenshot>
+  </screenshots>
+
+  <content_rating type="oars-1.1"/>
+
+  <releases>
+    <release version="0.1.0" date="2026-09-16" type="development">
+      <description>
+        <p>
+          First development release: detects supported NZXT controllers, sets colours and effects on
+          the LED channels the hardware reports, keeps settings in the standard XDG locations, and
+          can reapply them at login through a systemd user service.
+        </p>
+      </description>
+    </release>
+  </releases>
+</component>

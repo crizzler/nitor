@@ -1,0 +1,65 @@
+# Maintainer: Nitor contributors <https://github.com/crizzler/nitor/issues>
+#
+# Release package: installs the tagged release tarball.
+#
+# The checksum is deliberately 'SKIP' until v0.1.0 is tagged on GitHub: it cannot be computed before
+# the tarball exists. Regenerate it with `updpkgsums` (pacman-contrib) once the tag is pushed, then
+# `makepkg --printsrcinfo > .SRCINFO`.
+#
+# A SKIP checksum is exactly the kind of thing a PKGBUILD scanner should flag; until a release is
+# tagged, install the nitor-git package instead. See docs/packaging.md.
+pkgname=nitor
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Control NZXT LED lighting on Linux without NZXT CAM'
+arch=('any')
+url='https://github.com/crizzler/nitor'
+license=('MIT')
+depends=('python' 'pyside6' 'liquidctl')
+optdepends=('qqc2-desktop-style: use the native Plasma look and feel')
+makedepends=('python-build' 'python-installer' 'python-wheel' 'python-setuptools')
+checkdepends=('python-pytest')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+  cd "$pkgname-$pkgver"
+  python -m build --wheel --no-isolation
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+  PYTHONPATH=src QT_QPA_PLATFORM=offscreen python -m pytest -q
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  python -m installer --destdir="$pkgdir" dist/*.whl
+
+  # Desktop integration, so the application appears properly in the KDE launcher.
+  install -Dm644 src/nitor/data/io.github.crizzler.Nitor.desktop \
+    "$pkgdir/usr/share/applications/io.github.crizzler.Nitor.desktop"
+  install -Dm644 src/nitor/data/io.github.crizzler.Nitor.metainfo.xml \
+    "$pkgdir/usr/share/metainfo/io.github.crizzler.Nitor.metainfo.xml"
+
+  install -Dm644 src/nitor/assets/icon.svg \
+    "$pkgdir/usr/share/icons/hicolor/scalable/apps/io.github.crizzler.Nitor.svg"
+
+  local size
+  for size in 16 22 24 32 48 64 96 128 256 512; do
+    install -Dm644 "src/nitor/assets/icons/hicolor/${size}x${size}/apps/io.github.crizzler.Nitor.png" \
+      "$pkgdir/usr/share/icons/hicolor/${size}x${size}/apps/io.github.crizzler.Nitor.png"
+  done
+
+  # A ready-to-use user unit. The application writes its own copy into
+  # ~/.config/systemd/user/ when the setting is enabled, and that copy takes precedence.
+  sed -e 's|@@EXEC_START@@|/usr/bin/nitor|' -e '/@@ENVIRONMENT@@/d' \
+    src/nitor/data/nitor.service > nitor.service
+  install -Dm644 nitor.service "$pkgdir/usr/lib/systemd/user/nitor.service"
+
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+  install -Dm644 CHANGELOG.md "$pkgdir/usr/share/doc/$pkgname/CHANGELOG.md"
+  install -Dm644 docs/hardware-notes.md "$pkgdir/usr/share/doc/$pkgname/hardware-notes.md"
+  install -Dm644 docs/troubleshooting.md "$pkgdir/usr/share/doc/$pkgname/troubleshooting.md"
+}

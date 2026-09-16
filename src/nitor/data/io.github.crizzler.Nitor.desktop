@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Nitor
+GenericName=NZXT Lighting Control
+Comment=Control NZXT LED lighting without NZXT CAM
+Exec=nitor
+Icon=io.github.crizzler.Nitor
+Terminal=false
+Categories=Settings;HardwareSettings;Qt;
+Keywords=NZXT;RGB;LED;lighting;Kraken;HUE;controller;
+StartupNotify=true
