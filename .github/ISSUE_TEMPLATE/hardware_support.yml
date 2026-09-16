@@ -1,0 +1,57 @@
+name: Hardware support request
+description: Ask for another NZXT device to be supported, or report how one behaves
+title: "[Hardware] "
+labels: ["hardware"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Nitor controls lighting through liquidctl, so support for a new device usually starts
+        upstream. These three commands say almost everything that is needed.
+  - type: input
+    attributes:
+      label: Device
+      description: The model name as printed on the hardware or its box.
+      placeholder: e.g. NZXT Kraken Z63, NZXT RGB & Fan Controller
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: lsusb output
+      description: "`lsusb | grep -iE \"NZXT|1e71\"`"
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: liquidctl list output
+      description: "`liquidctl list` — if liquidctl does not list the device, that is the answer, and it belongs upstream at https://github.com/liquidctl/liquidctl"
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: liquidctl initialize output
+      description: >
+        `liquidctl initialize` after selecting the device. This reports the firmware version and
+        which LED accessories are detected on each channel, which is what Nitor builds its controls
+        from.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Nitor diagnostics
+      description: Settings → Copy diagnostics
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: What you observed on the hardware
+      description: >
+        Which LEDs are connected to which channel, what actually changed when you set a colour, and
+        whether the lighting survives a power cycle. Please say plainly what you tested and what you
+        are only assuming; the documentation distinguishes the two.
+    validations:
+      required: true

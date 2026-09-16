@@ -1,0 +1,60 @@
+name: Bug report
+description: Something in Nitor does not work as it should
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. Please fill in the diagnostics report below:
+        most lighting problems are permissions, a missing backend, or a device that another program
+        is holding open, and the report distinguishes between them.
+
+        Please do not paste the output of `liquidctl --debug` without reading it first.
+  - type: checkboxes
+    attributes:
+      label: Before reporting
+      options:
+        - label: I read docs/troubleshooting.md
+          required: true
+        - label: Nitor is the only program talking to the controller (OpenRGB and NZXT CAM are closed)
+          required: true
+  - type: textarea
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Diagnostics
+      description: >
+        Settings → Copy diagnostics. It contains versions, USB ids, channels and permission state,
+        and deliberately no user names, host names or serial numbers.
+      render: text
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: How Nitor was installed
+      placeholder: e.g. nitor-git from packaging/arch, or running from a source checkout
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Distribution and desktop
+      placeholder: e.g. CachyOS 2026.09, KDE Plasma 6 on Wayland
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Does it also happen with a mock device?
+      description: >
+        Run `nitor --mock-device`. If the problem also appears there, it is an interface bug rather
+        than a hardware or permissions problem, which narrows it down a lot.
+      options:
+        - Not tried
+        - Yes, it happens with --mock-device too
+        - No, only with real hardware
+    validations:
+      required: true

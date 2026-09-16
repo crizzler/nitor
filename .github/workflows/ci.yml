@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Lint, test and smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade "PySide6>=6.6" pytest "ruff>=0.6"
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Check formatting
+        run: ruff format --check .
+
+      - name: Tests
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: pytest -q
+
+      - name: Smoke test (mock device, offscreen)
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: python -m nitor --backend mock --self-test
+
+  arch:
+    name: Arch packaging
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - name: Install tooling
+        run: |
+          pacman -Syu --noconfirm --needed \
+            base-devel git sudo pacman-contrib namcap \
+            python python-pyside6 pyside6 liquidctl qt6-declarative python-pytest
+
+      - uses: actions/checkout@v4
+
+      - name: Lint the QML
+        run: |
+          find src -name '*.qml' -print0 | xargs -0 -n1 qmllint
+
+      - name: Validate the PKGBUILDs and smoke test as a normal user
+        run: |
+          # makepkg refuses to run as root, which is the point: it catches packaging that only
+          # works because of root's environment.
+          useradd -m builder
+          cp -r "$GITHUB_WORKSPACE" /home/builder/nitor
+          chown -R builder /home/builder/nitor
+          su builder -c 'cd /home/builder/nitor/packaging/arch/nitor && makepkg --printsrcinfo > /dev/null'
+          su builder -c 'cd /home/builder/nitor/packaging/arch/nitor-git && makepkg --printsrcinfo > /dev/null'
+          su builder -c 'cd /home/builder/nitor && PYTHONPATH=src QT_QPA_PLATFORM=offscreen python -m nitor --backend mock --self-test'
+
+      - name: Package lint
+        continue-on-error: true
+        run: |
+          su builder -c 'cd /home/builder/nitor/packaging/arch/nitor && namcap PKGBUILD'
+          su builder -c 'cd /home/builder/nitor/packaging/arch/nitor-git && namcap PKGBUILD'

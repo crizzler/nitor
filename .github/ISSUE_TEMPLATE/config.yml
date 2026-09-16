@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: liquidctl issues
+    url: https://github.com/liquidctl/liquidctl/issues
+    about: If liquidctl itself does not list your device, or errors when driving it, the issue belongs upstream.
+  - name: Troubleshooting guide
+    url: https://github.com/crizzler/nitor/blob/main/docs/troubleshooting.md
+    about: Permissions, missing backend, device not found, and startup lighting.
