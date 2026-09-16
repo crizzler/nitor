@@ -22,7 +22,7 @@ pytest.importorskip("PySide6")
 from PySide6.QtGui import QGuiApplication
 
 from nitor.backend.mock import MockBackend
-from nitor.domain import Device
+from nitor.domain import Device, PermissionDeniedError
 from nitor.services.autostart import AutostartManager, CommandOutcome
 from nitor.services.settings import SettingsStore
 from nitor.ui.viewmodel import NitorViewModel
@@ -295,3 +295,71 @@ def test_window_size_is_persisted(view_model: NitorViewModel) -> None:
 
     stored = view_model._store.load()
     assert (stored.window_width, stored.window_height) == (1180, 760)
+
+
+class DeniedBackend(MockBackend):
+    """A backend whose listing is refused, which is what happens without a udev rule.
+
+    liquidctl cannot read the USB string descriptors either, so discovery fails outright rather than
+    returning an empty list. Verified against the real backend on the development machine.
+    """
+
+    def discover_devices(self) -> list[Device]:
+        raise PermissionDeniedError(
+            "The controller was found, but Linux denied access to it.",
+            hint="The device needs its udev rule ('sudo pacman -S liquidctl').",
+        )
+
+
+def test_a_refused_listing_is_not_reported_as_missing_hardware(
+    qt_application: QGuiApplication, tmp_path: Path
+) -> None:
+    """A permission problem and an unplugged controller need different advice from the user.
+
+    Reporting the failure as "found nothing" would send someone to check their cabling when what
+    they actually need is the udev rule.
+    """
+    model = NitorViewModel(
+        DeniedBackend(),
+        store=SettingsStore(tmp_path / "config.json"),
+        autostart=AutostartManager(
+            unit_directory=tmp_path / "systemd" / "user",
+            exec_start="/usr/bin/nitor",
+            environment=[],
+            runner=FakeSystemctl(),  # type: ignore[arg-type]
+        ),
+        debounce=DEBOUNCE,
+        min_interval=0.0,
+    )
+    try:
+        model.start()
+        assert pump(lambda: model.statusKind == "error", qt_application)
+
+        assert model.accessDenied is True
+        assert "denied" in model.statusMessage
+        assert "udev" in model.statusHint
+        assert "No compatible" not in model.statusMessage
+    finally:
+        model.shutdown()
+
+
+def test_the_autostart_note_does_not_talk_over_a_failure(
+    view_model: NitorViewModel, qt_application: QGuiApplication
+) -> None:
+    """The autostart check runs moments after discovery, so it must not replace a real problem."""
+    from nitor.domain import HardwareError
+
+    view_model.start()
+    assert pump(lambda: view_model.ready, qt_application)
+
+    backend = view_model._backend
+    backend.queue_failure(HardwareError("The controller did not respond in time."))
+    view_model.setPreset("Green")
+    quiesce(qt_application, 0.6)
+    assert view_model.statusKind == "error"
+
+    view_model.queryAutostart()
+    quiesce(qt_application, 0.3)
+
+    assert view_model.statusKind == "error"
+    assert view_model.statusMessage == "The controller did not respond in time."

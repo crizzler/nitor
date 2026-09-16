@@ -45,19 +45,12 @@ Pane {
         Label {
             Layout.fillWidth: true
             visible: text.length > 0
+            // The single source of these instructions is the backend, which knows which rule file
+            // and which package provides it. Repeating them here would give two places to update
+            // and two slightly different sets of advice on screen.
             text: card.backendMissing ? card.backendHint : card.permissionHint
             wrapMode: Text.WordWrap
             opacity: 0.85
-        }
-
-        Label {
-            Layout.fillWidth: true
-            visible: card.permissionDenied
-            wrapMode: Text.WordWrap
-            opacity: 0.85
-            text: "The controller needs its udev rule. Installing the liquidctl package provides it. " +
-                  "If liquidctl was installed another way, copy 71-liquidctl.rules into " +
-                  "/etc/udev/rules.d/ and run: sudo udevadm control --reload-rules && sudo udevadm trigger"
         }
 
         RowLayout {

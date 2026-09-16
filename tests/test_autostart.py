@@ -182,6 +182,27 @@ def test_state_reports_missing_systemd(tmp_path: Path, monkeypatch: pytest.Monke
     assert "systemd" in state.detail
 
 
+def test_a_systemctl_token_is_never_shown_to_the_user(tmp_path: Path) -> None:
+    """`systemctl is-enabled` answers with words like 'not-found'; a person needs a sentence.
+
+    The answer used to be passed straight into the status line, so the window footer read
+    "not-found".
+    """
+
+    class TokenSystemctl:
+        def __init__(self, token: str) -> None:
+            self.token = token
+
+        def __call__(self, argv: tuple[str, ...]) -> CommandOutcome:
+            return CommandOutcome(argv=argv, returncode=1, stdout=f"{self.token}\n")
+
+    for token in ("not-found", "disabled", "masked"):
+        state = manager(tmp_path, TokenSystemctl(token)).state()  # type: ignore[arg-type]
+        assert state.detail, token
+        assert token not in state.detail, f"{token!r} leaked into {state.detail!r}"
+        assert state.detail.endswith(".")
+
+
 def test_the_default_command_prefers_an_installed_nitor(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

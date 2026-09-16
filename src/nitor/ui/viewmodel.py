@@ -59,6 +59,10 @@ MAX_EDITABLE_SLOTS = 8
 #: Fallback base font size, used only when the view model is built without a running application.
 DEFAULT_FONT_POINT_SIZE = 10
 
+#: How long shutdown waits for an in-flight hardware call. Must exceed the backend's own subprocess
+#: timeout, otherwise closing the window during a slow call destroys a running QThread and aborts.
+WORKER_STOP_TIMEOUT = 20.0
+
 
 class _BackendWorker(QObject):
     """Runs every hardware operation, on its own thread."""
@@ -89,8 +93,11 @@ class _BackendWorker(QObject):
         try:
             devices = self._backend.discover_devices()
         except NitorError as error:
+            # Only report the failure. Also emitting an empty device list would look like a
+            # successful search that found nothing, and the "no controller found" handling would
+            # then overwrite the real reason: a permission problem would be reported as missing
+            # hardware, with the udev advice replaced by "check lsusb".
             self.failed.emit("discover", error)
-            self.discovered.emit([], status)
             return
         self.discovered.emit(devices, status)
 
@@ -241,11 +248,24 @@ class NitorViewModel(QObject):
 
     @Slot()
     def shutdown(self) -> None:
-        """Stop the worker thread. Called when the window closes."""
+        """Stop the worker thread. Called when the window closes.
+
+        The wait deliberately outlasts a single backend call. Destroying a QThread while it is still
+        running aborts the whole process ("QThread: Destroyed while thread is still running"), and
+        the case that matters is closing the window while a hardware call is in flight: a liquidctl
+        invocation may legitimately take longer than a few seconds, so a short wait would turn
+        "close the window" into a crash on exit. Every backend call has its own subprocess timeout,
+        so this is bounded in practice.
+        """
         self._timer.stop()
         self._scheduler.cancel()
         self._thread.quit()
-        self._thread.wait(3000)
+        if not self._thread.wait(WORKER_STOP_TIMEOUT):
+            _LOGGER.warning(
+                "the hardware worker was still running after %gs; waiting anyway",
+                WORKER_STOP_TIMEOUT,
+            )
+            self._thread.wait()
 
     # -- worker results ------------------------------------------------------------------
 
@@ -408,6 +428,12 @@ class NitorViewModel(QObject):
         self._autostart_state = state
         self._settings.apply_on_login = state.active
         self._remember()
+        # Never talk over a failure. The autostart check runs at startup, just after discovery, so
+        # without this a permission problem or a missing backend would be replaced by a note about
+        # login behaviour before the user had a chance to read it.
+        if self._status_kind == STATUS_ERROR:
+            self.changed.emit()
+            return
         if state.active:
             self._set_status("Lighting will be reapplied when you log in.", STATUS_OK)
         elif state.detail:

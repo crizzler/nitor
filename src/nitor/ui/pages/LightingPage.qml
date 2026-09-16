@@ -61,7 +61,10 @@ Page {
             Pane {
                 Layout.fillWidth: true
                 Layout.margins: 20
+                // Hidden while access is denied: the recovery card above already explains that the
+                // controller is there, so claiming none was found would contradict it.
                 visible: page.app.backendAvailable && !page.app.ready && !page.app.busy
+                         && !page.app.accessDenied
                 padding: 24
 
                 background: Rectangle {

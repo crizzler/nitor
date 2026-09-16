@@ -32,6 +32,27 @@ EXEC_PLACEHOLDER: Final = "@@EXEC_START@@"
 ENVIRONMENT_PLACEHOLDER: Final = "@@ENVIRONMENT@@"
 SYSTEMCTL_TIMEOUT: Final = 20.0
 
+#: The answers ``systemctl is-enabled`` gives that mean "this will run at login".
+_ENABLED_STATES: Final = frozenset({"enabled", "enabled-runtime"})
+
+#: ``systemctl is-enabled`` answers with a single word, which is fine for a script and meaningless in
+#: a status line. These are the ones worth explaining to a person.
+_STATE_EXPLANATIONS: Final = {
+    "disabled": "The startup service is installed but not enabled.",
+    "not-found": "No startup service is installed.",
+    "masked": "The startup service is masked, so it cannot be enabled.",
+    "masked-runtime": "The startup service is masked, so it cannot be enabled.",
+    "static": "This service cannot be enabled or disabled.",
+    "indirect": "This service is enabled indirectly by another unit.",
+    "alias": "This unit is an alias for another unit.",
+    "linked": "The startup service is linked from elsewhere.",
+    "linked-runtime": "The startup service is linked from elsewhere.",
+    "generated": "This service is generated rather than enabled.",
+    "transient": "This service is transient.",
+    "bad": "The startup service definition is invalid.",
+    "bad-file": "The startup service definition is invalid.",
+}
+
 Runner = Callable[[Sequence[str]], "CommandOutcome"]
 
 
@@ -158,6 +179,19 @@ def render_unit(
     return rendered
 
 
+def _explain_state(token: str) -> str:
+    """Turn systemctl's one-word answer into something worth showing a user.
+
+    Without this, a user whose service does not exist yet is told "not-found", which is a token,
+    not an explanation.
+    """
+    if not token:
+        return ""
+    if token in _STATE_EXPLANATIONS:
+        return _STATE_EXPLANATIONS[token]
+    return f"systemd reports the startup service as '{token}'."
+
+
 class AutostartManager:
     """Installs, enables and disables the startup service."""
 
@@ -210,10 +244,16 @@ class AutostartManager:
 
         installed = self.unit_path.is_file()
         result = self._systemctl("is-enabled", UNIT_NAME)
-        enabled = result.ok and result.output.strip() in {"enabled", "enabled-runtime"}
-        detail = "" if enabled else result.output
-        if installed and not enabled and not detail:
-            detail = "The service exists but is not enabled."
+        answer = result.output.strip()
+        enabled = result.ok and answer in _ENABLED_STATES
+        if enabled:
+            detail = ""
+        elif not installed:
+            # Nothing of ours is on disk, so no answer from systemd is worth repeating: the useful
+            # statement is simply that there is no service yet.
+            detail = "No startup service is installed."
+        else:
+            detail = _explain_state(answer) or "The service exists but is not enabled."
 
         return AutostartState(
             supported=True,

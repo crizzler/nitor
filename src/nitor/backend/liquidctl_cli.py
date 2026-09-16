@@ -163,7 +163,12 @@ class LiquidctlBackend(HardwareBackend):
     # -- operations -----------------------------------------------------------------------
 
     def discover_devices(self) -> list[Device]:
-        """List supported devices. This only reads USB descriptors, so it needs no permissions."""
+        """List supported devices, or explain why that was refused.
+
+        This is a read, but on Linux it is not a privilege-free one: liquidctl cannot even read the
+        USB string descriptors without the udev rule, so a listing failure is a real outcome that
+        the caller has to classify (see ``classify_failure``) rather than treat as "no hardware".
+        """
         result = self._run(build_list_argv())
         return parse_device_list(result.stdout)
 

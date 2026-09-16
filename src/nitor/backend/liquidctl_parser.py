@@ -311,9 +311,11 @@ def classify_failure(*, returncode: int, stdout: str, stderr: str) -> Exception:
         return PermissionDeniedError(
             "The controller was found, but Linux denied access to it.",
             hint=(
-                "The device needs its udev rule. Installing the liquidctl package provides it "
-                "('sudo pacman -S liquidctl'). If you installed liquidctl another way, copy "
-                "71-liquidctl.rules into /etc/udev/rules.d/ and reload udev."
+                "The controller needs its udev rule, which installing the liquidctl package "
+                "provides ('sudo pacman -S liquidctl'). If you installed liquidctl another way, "
+                "copy 71-liquidctl.rules into /etc/udev/rules.d/ and run "
+                "'sudo udevadm control --reload-rules && sudo udevadm trigger', then reconnect "
+                "the controller."
             ),
             detail=_first_meaningful_line(stderr) or _first_meaningful_line(stdout),
         )
