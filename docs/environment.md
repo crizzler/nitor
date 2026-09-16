@@ -48,6 +48,29 @@ LED milestone cannot be completed until `liquidctl` (which ships `71-liquidctl.r
 by a user with sudo rights. Everything else in the project is developed against the mock backend,
 which exercises the same code paths as the real backend.
 
+## Backend validation without root
+
+To validate the real backend path without installing anything system-wide, liquidctl 1.16.0 (the
+exact version in the repositories) was installed into a throwaway virtual environment and Nitor was
+pointed at it by putting that environment's `bin` directory first on `PATH`:
+
+```bash
+python3 -m venv /tmp/lcvenv
+/tmp/lcvenv/bin/pip install liquidctl
+PATH="/tmp/lcvenv/bin:$PATH" PYTHONPATH=src python -m nitor --diagnostics
+```
+
+What that did and did not establish:
+
+- **Established:** Nitor detects the backend and reads its version (1.16.0) from real output, and
+  classifies the real failure correctly. Without the udev rule, even `liquidctl list` fails, with
+  `ValueError: The device has no langid (permission issue, no string descriptors supported or device
+  error)`; Nitor reports "The controller was found, but Linux denied access to it" with the udev
+  hint, and a regression test pins that verbatim string.
+- **Not established:** anything about LEDs. Enumeration, `initialize` and every write require the
+  udev rules, which need root to install. The device descriptions, channel names and effect tables
+  therefore still come from upstream source rather than from this hardware.
+
 Required hand-off command (one line, run by the user):
 
 ```bash

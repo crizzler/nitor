@@ -20,9 +20,19 @@ udev rules are missing — see the next section.
 
 ## "The controller was found, but Linux denied access to it"
 
-The device node exists but your user cannot write to it. `liquidctl list` still works because
-listing only reads USB descriptors, which is why Nitor can tell the difference between *not plugged
-in* and *not permitted*.
+The device node exists but your user cannot write to it. Nitor tells this apart from *not plugged in*
+because the two need completely different things from you, and the difference is visible in the
+error text: a permission failure is reported, rather than "no hardware found".
+
+If you run liquidctl by hand without the rules installed, the symptom is usually this, which does not
+read like a permission problem at all:
+
+```
+$ liquidctl list
+ValueError: The device has no langid (permission issue, no string descriptors supported or device error)
+```
+
+Nitor recognises that wording and shows this message instead.
 
 `/dev/hidraw*` is normally owned by root. The liquidctl package ships a udev rule that grants access
 to supported devices. Check whether it is present:

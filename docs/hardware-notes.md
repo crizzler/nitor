@@ -61,12 +61,27 @@ duty through hwmon, so LED control is unaffected by them but still needs raw HID
 `71-liquidctl.rules` is installed, therefore unprivileged LED writes are impossible until the udev
 rules from the `liquidctl` package are present.
 
-`Nitor` detects this situation and reports it distinctly from "no hardware found":
+`Nitor` detects this situation and reports it distinctly from "no hardware found".
 
-- `list` works without privileges (it only enumerates USB), so device detection and the product
-  strings are still available.
-- `Nitor` then checks read/write access to the `address` field reported for each device (for example
-  `/dev/hidraw5`) to decide between "connected" and "connected but access denied".
+**Also verified here (liquidctl 1.16.0, still without a udev rule):** *enumeration* fails too, because
+reading the USB string descriptors needs the same access that LED writes do: 
+
+```
+$ liquidctl list --json
+ValueError: The device has no langid (permission issue, no string descriptors supported or device error)
+```
+
+So the design cannot assume a privilege-free "list" step: before the rules are installed there is no
+way to read even the product strings, and `Nitor` reports the permission problem (with the udev
+instructions) rather than claiming no hardware is present. `classify_failure` keys off the
+`permission issue` and `no langid` wording for exactly this reason, and a regression test pins that
+verbatim output.
+
+Once the rules are installed:
+
+- `list` enumerates devices and reports product strings without privileges.
+- `Nitor` additionally checks read/write access to the `address` field reported for each device (for
+example `/dev/hidraw5`) to decide between "connected" and "connected but access denied".
 
 ## Effects
 
@@ -108,10 +123,12 @@ exactly the number of slots the selected effect accepts.
 
 | Item                                                    | State |
 | :------------------------------------------------------ | :---- |
-| Device enumeration and product strings                  | **Verified upstream**; not yet run against this hardware (liquidctl not installed) |
-| Channel list and accessory detection via `initialize`    | **Verified upstream**; not yet run |
-| Setting a fixed colour on `led1` / `led2` / `sync`       | Not yet tested — blocked on udev rules |
-| Setting a fixed colour on the Kraken `external` channel  | Not yet tested — blocked on udev rules |
+| Backend version detection                               | **Verified** on this machine with liquidctl 1.16.0 (the version Arch ships) |
+| Device enumeration and product strings                  | Attempted here: enumeration is refused until the udev rule exists, so the product strings remain unverified. Descriptions and drivers come from upstream source |
+| Permission failure detected and explained               | **Verified** here: `liquidctl list` fails with the `no langid` error and Nitor reports "connected but access denied" with the udev hint |
+| Channel list and accessory detection via `initialize`    | Not yet run — blocked on the udev rules |
+| Setting a fixed colour on `led1` / `led2` / `sync`       | Not yet tested — blocked on the udev rules |
+| Setting a fixed colour on the Kraken `external` channel  | Not yet tested — blocked on the udev rules |
 | Lighting persistence across S5/reboot                   | Not yet tested (upstream states settings persist while the device keeps power) |
 | Unprivileged writes after udev rules                    | Not yet tested |
 

@@ -195,6 +195,22 @@ def test_failures_are_classified_by_cause(stderr: str, expected: type[Exception]
     assert isinstance(error, expected)
 
 
+def test_the_langid_failure_is_treated_as_a_permission_problem() -> None:
+    """Verbatim output from this project's own machine, before the udev rule was installed.
+
+    It is the first thing a user meets after installing liquidctl, and it does not read like a
+    permission error, so it is worth pinning down.
+    """
+    observed = (
+        "ValueError: The device has no langid (permission issue, no string descriptors "
+        "supported or device error)"
+    )
+    error = classify_failure(returncode=1, stdout="", stderr=observed)
+    assert isinstance(error, PermissionDeniedError)
+    assert error.hint is not None
+    assert "udev" in error.hint
+
+
 def test_permission_errors_explain_the_udev_rule() -> None:
     error = classify_failure(returncode=1, stdout="", stderr="Access denied")
     assert isinstance(error, PermissionDeniedError)

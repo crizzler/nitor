@@ -47,6 +47,13 @@ _PERMISSION_MARKERS: Final = (
     "permission denied",
     "errno 13",
     "insufficient permission",
+    # Observed on a real CachyOS system with liquidctl 1.16.0 and no udev rule installed: the USB
+    # string descriptors cannot be read either, so even `liquidctl list` fails with
+    # "ValueError: The device has no langid (permission issue, no string descriptors supported or
+    # device error)". Without these two markers that lands in the generic hardware branch and the
+    # user is told to replug the controller instead of being shown the udev rule.
+    "permission issue",
+    "no langid",
 )
 _MISSING_DEVICE_MARKERS: Final = (
     "no devices",
