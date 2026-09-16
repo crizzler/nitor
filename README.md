@@ -174,8 +174,8 @@ PYTHONPATH=src pytest
 # Lint and formatting
 ruff check . && ruff format --check .
 
-# QML
-find src -name '*.qml' -exec qmllint {} \;
+# QML (Qt 6's linter, warnings treated as errors)
+find src -name '*.qml' -exec qmllint -W0 {} \;
 
 # The whole application, headless: backend, command gate, settings, unit, QML
 PYTHONPATH=src python -m nitor --backend mock --self-test

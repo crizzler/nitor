@@ -31,9 +31,13 @@ PYTHONPATH=src pytest
 ruff check .
 ruff format --check .
 
-# QML
-find src -name '*.qml' -exec qmllint {} \;
+# QML (Qt 6's linter; -W0 makes any warning an error)
+find src -name '*.qml' -exec qmllint -W0 {} \;
 ```
+
+Use Qt 6's `qmllint`, not Qt 5's. On Arch and CachyOS the Qt 6 binary is
+`/usr/lib/qt6/bin/qmllint` while `/usr/bin/qmllint` still belongs to Qt 5 (`qt5-declarative`), and the
+Qt 5 linter will happily report nothing while missing real problems.
 
 `ruff` and `pytest` are the only development dependencies. Install them with
 `python -m pip install --user pytest ruff` or your distribution's packages.

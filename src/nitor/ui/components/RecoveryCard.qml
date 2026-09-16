@@ -91,7 +91,8 @@ Pane {
                 Layout.fillWidth: true
                 text: "Nitor will never run sudo for you."
                 opacity: 0.6
-                font.pointSize: Math.round(Qt.application.font.pointSize * 0.9)
+                // The card's own resolved font, so this component stays independent of the view model.
+                font.pointSize: Math.round(card.font.pointSize * 0.9)
             }
         }
     }

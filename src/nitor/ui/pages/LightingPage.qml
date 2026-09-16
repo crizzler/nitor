@@ -1,6 +1,9 @@
 // The screen that answers the five questions a user actually has: is my hardware here, which device
 // am I controlling, what colour, which effect, which channel.
 
+// Delegates read the page's own ids, which requires explicit bound component behaviour.
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -8,6 +11,8 @@ import "../components"
 
 Page {
     id: page
+
+    required property var app
 
     function effectTooltip(effect) {
         const parts = [effect.group];
@@ -42,21 +47,21 @@ Page {
                 Layout.leftMargin: 20
                 Layout.rightMargin: 20
                 Layout.topMargin: 20
-                backendMissing: !app.backendAvailable
-                backendSummary: app.backendSummary
-                backendHint: app.backendHint
-                installCommand: app.installCommand
-                permissionDenied: app.accessDenied
-                permissionHint: app.permissionHint
-                onRecheckRequested: app.refresh()
-                onCopyRequested: text => app.copyToClipboard(text)
+                backendMissing: !page.app.backendAvailable
+                backendSummary: page.app.backendSummary
+                backendHint: page.app.backendHint
+                installCommand: page.app.installCommand
+                permissionDenied: page.app.accessDenied
+                permissionHint: page.app.permissionHint
+                onRecheckRequested: page.app.refresh()
+                onCopyRequested: text => page.app.copyToClipboard(text)
             }
 
             // Nothing to control (yet): say so plainly instead of showing dead controls.
             Pane {
                 Layout.fillWidth: true
                 Layout.margins: 20
-                visible: app.backendAvailable && !app.ready && !app.busy
+                visible: page.app.backendAvailable && !page.app.ready && !page.app.busy
                 padding: 24
 
                 background: Rectangle {
@@ -72,13 +77,13 @@ Page {
                         Layout.fillWidth: true
                         text: "No compatible NZXT controller found"
                         font.bold: true
-                        visible: !app.hasDevices
+                        visible: !page.app.hasDevices
                     }
 
                     Label {
                         Layout.fillWidth: true
                         wrapMode: Text.WordWrap
-                        text: app.hasDevices
+                        text: page.app.hasDevices
                               ? "A device was detected, but Nitor cannot control its LEDs. " +
                                 "See the Devices page for details."
                               : "Connect an NZXT RGB & Fan Controller or a Kraken Z series cooler, " +
@@ -87,7 +92,7 @@ Page {
 
                     Button {
                         text: "Check again"
-                        onClicked: app.refresh()
+                        onClicked: page.app.refresh()
                     }
                 }
             }
@@ -98,13 +103,13 @@ Page {
                 Layout.rightMargin: 20
                 Layout.bottomMargin: 20
                 spacing: 16
-                visible: app.ready
+                visible: page.app.ready
 
                 SectionCard {
                     Layout.fillWidth: true
                     title: "Colour"
-                    subtitle: app.effectsUseColors
-                              ? "The LEDs will show this colour" + (app.brightness < 100 ? " at " + app.brightness + "% brightness" : "")
+                    subtitle: page.app.effectsUseColors
+                              ? "The LEDs will show this colour" + (page.app.brightness < 100 ? " at " + page.app.brightness + "% brightness" : "")
                               : "The selected effect generates its own colours"
 
                     RowLayout {
@@ -115,12 +120,12 @@ Page {
                             id: wheel
                             Layout.preferredWidth: 176
                             Layout.preferredHeight: 176
-                            enabled: app.effectsUseColors
-                            hue: app.colorHue
-                            saturation: app.colorSaturation
-                            value: app.colorValue
+                            enabled: page.app.effectsUseColors
+                            hue: page.app.colorHue
+                            saturation: page.app.colorSaturation
+                            value: page.app.colorValue
                             borderColor: Qt.rgba(page.palette.text.r, page.palette.text.g, page.palette.text.b, 0.15)
-                            onColorPicked: (red, green, blue) => app.setColorComponents(red, green, blue)
+                            onColorPicked: (red, green, blue) => page.app.setColorComponents(red, green, blue)
                         }
 
                         ColumnLayout {
@@ -129,41 +134,41 @@ Page {
 
                             ColorSlotRow {
                                 Layout.fillWidth: true
-                                items: app.colorSlots
+                                items: page.app.colorSlots
                                 textColor: page.palette.text
-                                onSlotChosen: index => app.selectColorSlot(index)
+                                onSlotChosen: index => page.app.selectColorSlot(index)
                             }
 
                             HexField {
                                 Layout.fillWidth: true
-                                colorHex: app.colorHex
-                                enabled: app.effectsUseColors
-                                onCommitted: text => app.setColorHex(text)
+                                colorHex: page.app.colorHex
+                                enabled: page.app.effectsUseColors
+                                onCommitted: text => page.app.setColorHex(text)
                             }
 
                             PresetSwatches {
                                 Layout.fillWidth: true
-                                items: app.presets
-                                current: app.colorHex
+                                items: page.app.presets
+                                current: page.app.colorHex
                                 textColor: page.palette.text
                                 highlightColor: page.palette.highlight
-                                enabled: app.effectsUseColors
-                                onPicked: name => app.setPreset(name)
+                                enabled: page.app.effectsUseColors
+                                onPicked: name => page.app.setPreset(name)
                             }
 
                             Rectangle {
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: 56
                                 radius: 6
-                                color: app.previewColor
+                                color: page.app.previewColor
                                 border.width: 1
                                 border.color: Qt.rgba(page.palette.text.r, page.palette.text.g, page.palette.text.b, 0.2)
 
                                 Label {
                                     anchors.centerIn: parent
-                                    visible: app.brightness < 100 && app.effectsUseColors
-                                    text: "sending " + app.effectiveColor
-                                    color: app.brightness < 45 ? "#ffffff" : "#101010"
+                                    visible: page.app.brightness < 100 && page.app.effectsUseColors
+                                    text: "sending " + page.app.effectiveColor
+                                    color: page.app.brightness < 45 ? "#ffffff" : "#101010"
                                     font.family: "monospace"
                                 }
                             }
@@ -179,18 +184,18 @@ Page {
                     ComboBox {
                         id: effectBox
                         Layout.fillWidth: true
-                        model: app.effects
+                        model: page.app.effects
                         textRole: "label"
                         valueRole: "id"
                         currentIndex: {
-                            for (let index = 0; index < app.effects.length; ++index) {
-                                if (app.effects[index].id === app.effectId) {
+                            for (let index = 0; index < page.app.effects.length; ++index) {
+                                if (page.app.effects[index].id === page.app.effectId) {
                                     return index;
                                 }
                             }
                             return -1;
                         }
-                        onActivated: app.selectEffect(currentValue)
+                        onActivated: page.app.selectEffect(currentValue)
 
                         delegate: ItemDelegate {
                             id: effectRow
@@ -208,12 +213,12 @@ Page {
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 12
-                        visible: app.speedAvailable || app.directionAvailable
+                        visible: page.app.speedAvailable || page.app.directionAvailable
 
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: 4
-                            visible: app.speedAvailable
+                            visible: page.app.speedAvailable
 
                             Label {
                                 text: "Speed"
@@ -223,16 +228,16 @@ Page {
                             ComboBox {
                                 id: speedBox
                                 Layout.fillWidth: true
-                                model: app.speeds
-                                currentIndex: Math.max(0, app.speeds.indexOf(app.speed))
-                                onActivated: app.setSpeed(currentText)
+                                model: page.app.speeds
+                                currentIndex: Math.max(0, page.app.speeds.indexOf(page.app.speed))
+                                onActivated: page.app.setSpeed(currentText)
                             }
                         }
 
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: 4
-                            visible: app.directionAvailable
+                            visible: page.app.directionAvailable
 
                             Label {
                                 text: "Direction"
@@ -242,16 +247,16 @@ Page {
                             ComboBox {
                                 id: directionBox
                                 Layout.fillWidth: true
-                                model: app.directions
-                                currentIndex: Math.max(0, app.directions.indexOf(app.direction))
-                                onActivated: app.setDirection(currentText)
+                                model: page.app.directions
+                                currentIndex: Math.max(0, page.app.directions.indexOf(page.app.direction))
+                                onActivated: page.app.setDirection(currentText)
                             }
                         }
                     }
 
                     Label {
                         Layout.fillWidth: true
-                        visible: !app.effectsUseColors
+                        visible: !page.app.effectsUseColors
                         wrapMode: Text.WordWrap
                         opacity: 0.65
                         text: "This effect produces its own colours, so the colour picker and the " +
@@ -267,18 +272,18 @@ Page {
                     ComboBox {
                         id: channelBox
                         Layout.fillWidth: true
-                        model: app.channels
+                        model: page.app.channels
                         textRole: "label"
                         valueRole: "id"
                         currentIndex: {
-                            for (let index = 0; index < app.channels.length; ++index) {
-                                if (app.channels[index].id === app.channelId) {
+                            for (let index = 0; index < page.app.channels.length; ++index) {
+                                if (page.app.channels[index].id === page.app.channelId) {
                                     return index;
                                 }
                             }
                             return -1;
                         }
-                        onActivated: app.selectChannel(currentValue)
+                        onActivated: page.app.selectChannel(currentValue)
 
                         delegate: ItemDelegate {
                             id: channelRow
@@ -296,9 +301,9 @@ Page {
                     Label {
                         Layout.fillWidth: true
                         visible: {
-                            for (let index = 0; index < app.channels.length; ++index) {
-                                if (app.channels[index].id === app.channelId) {
-                                    return app.channels[index].summary === "No accessories detected";
+                            for (let index = 0; index < page.app.channels.length; ++index) {
+                                if (page.app.channels[index].id === page.app.channelId) {
+                                    return page.app.channels[index].summary === "No accessories detected";
                                 }
                             }
                             return false;
@@ -313,16 +318,16 @@ Page {
                 SectionCard {
                     Layout.fillWidth: true
                     title: "Brightness"
-                    subtitle: app.brightnessAvailable
+                    subtitle: page.app.brightnessAvailable
                               ? "Dims the colour Nitor sends; these controllers have no brightness setting of their own"
                               : "Not applicable to the selected effect"
 
                     BrightnessSlider {
                         Layout.fillWidth: true
-                        brightness: app.brightness
-                        effectiveColor: app.effectiveColor
-                        enabled: app.brightnessAvailable
-                        onMoved: percent => app.setBrightness(percent)
+                        brightness: page.app.brightness
+                        effectiveColor: page.app.effectiveColor
+                        enabled: page.app.brightnessAvailable
+                        onMoved: percent => page.app.setBrightness(percent)
                     }
 
                     RowLayout {
@@ -330,17 +335,17 @@ Page {
 
                         Button {
                             text: "Apply now"
-                            onClicked: app.applyNow()
+                            onClicked: page.app.applyNow()
                         }
 
                         Button {
                             text: "Turn off"
-                            onClicked: app.turnOff()
+                            onClicked: page.app.turnOff()
                         }
 
                         Button {
                             text: "Reset"
-                            onClicked: app.resetToDefaults()
+                            onClicked: page.app.resetToDefaults()
                         }
                     }
                 }
@@ -348,13 +353,13 @@ Page {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 8
-                    visible: app.notices.length > 0
+                    visible: page.app.notices.length > 0
 
                     Label {
                         Layout.fillWidth: true
                         wrapMode: Text.WordWrap
                         opacity: 0.7
-                        text: app.notices.join("\n")
+                        text: page.app.notices.join("\n")
                     }
                 }
             }

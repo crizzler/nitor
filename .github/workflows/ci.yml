@@ -70,8 +70,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Lint the QML
+        # Qt 6's qmllint is not on PATH in the container, and the Qt 5 binary that some systems
+        # expose as /usr/bin/qmllint would quietly check nothing. -W0 fails on any warning.
         run: |
-          find src -name '*.qml' -print0 | xargs -0 -n1 qmllint
+          find src -name '*.qml' -print0 | xargs -0 -n1 /usr/lib/qt6/bin/qmllint -W0
 
       - name: Validate the PKGBUILDs and smoke test as a normal user
         run: |

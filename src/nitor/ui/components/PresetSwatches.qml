@@ -1,8 +1,10 @@
 // The small, deliberately limited set of preset colours.
 
+// Delegates read the component's own ids, which requires explicit bound component behaviour.
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Layouts
 
 Flow {
     id: presets

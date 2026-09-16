@@ -8,6 +8,8 @@ import "../components"
 Page {
     id: page
 
+    required property var app
+
     ScrollView {
         id: scroller
         anchors.fill: parent
@@ -21,7 +23,7 @@ Page {
             SectionCard {
                 Layout.fillWidth: true
                 Layout.margins: 20
-                title: app.appName + " " + app.version
+                title: page.app.appName + " " + page.app.version
                 subtitle: "Simple, reliable control of NZXT LED lighting on Linux without NZXT CAM"
 
                 InfoRow {
@@ -40,13 +42,13 @@ Page {
                 InfoRow {
                     Layout.fillWidth: true
                     label: "Backend"
-                    value: app.backendSummary
+                    value: page.app.backendSummary
                 }
 
                 InfoRow {
                     Layout.fillWidth: true
                     label: "Mode"
-                    value: app.mockMode ? "Mock device (no hardware is touched)" : "Real hardware"
+                    value: page.app.mockMode ? "Mock device (no hardware is touched)" : "Real hardware"
                 }
 
                 RowLayout {

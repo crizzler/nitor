@@ -1,6 +1,9 @@
 // The window shell: a sidebar for navigation, a header for the device, and a footer that always
 // says what just happened.
 
+// Delegates read the component's own ids, which requires explicit bound component behaviour.
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -10,23 +13,27 @@ import "components"
 ApplicationWindow {
     id: root
 
+    // Supplied by the Python side as an initial property. Declaring it here (rather than relying on
+    // a context property) is what lets qmllint and the QML compiler see the view model at all.
+    required property var app
+
     property int currentPage: 0
     readonly property var navigation: ["Lighting", "Devices", "Settings", "About"]
 
     minimumWidth: 820
     minimumHeight: 560
-    title: app.appName
+    title: root.app.appName
     visible: true
 
     Component.onCompleted: {
         // Assigned rather than bound, so the window manager stays in charge of resizing.
-        width = app.windowWidth;
-        height = app.windowHeight;
-        app.start();
-        app.queryAutostart();
+        width = root.app.windowWidth;
+        height = root.app.windowHeight;
+        root.app.start();
+        root.app.queryAutostart();
     }
 
-    onClosing: app.saveWindowState(width, height)
+    onClosing: root.app.saveWindowState(width, height)
 
     header: ToolBar {
         RowLayout {
@@ -35,9 +42,9 @@ ApplicationWindow {
 
             Label {
                 Layout.leftMargin: 4
-                text: app.appName
+                text: root.app.appName
                 font.bold: true
-                font.pointSize: Math.round(Qt.application.font.pointSize * 1.2)
+                font.pointSize: Math.round(root.app.baseFontPointSize * 1.2)
             }
 
             Item {
@@ -45,11 +52,11 @@ ApplicationWindow {
             }
 
             Label {
-                visible: app.mockMode
+                visible: root.app.mockMode
                 text: "mock device"
                 color: "#f8961e"
                 padding: 4
-                font.pointSize: Math.round(Qt.application.font.pointSize * 0.9)
+                font.pointSize: Math.round(root.app.baseFontPointSize * 0.9)
                 ToolTip.visible: mockBadgeHover.hovered
                 ToolTip.text: "Development mode: no real hardware is being touched."
 
@@ -60,26 +67,26 @@ ApplicationWindow {
 
             ComboBox {
                 id: deviceBox
-                visible: app.devices.length > 0
+                visible: root.app.devices.length > 0
                 Layout.preferredWidth: Math.min(280, implicitWidth)
-                model: app.devices
+                model: root.app.devices
                 textRole: "name"
                 valueRole: "key"
-                enabled: app.devices.length > 1
+                enabled: root.app.devices.length > 1
                 currentIndex: {
-                    for (let index = 0; index < app.devices.length; ++index) {
-                        if (app.devices[index].current) {
+                    for (let index = 0; index < root.app.devices.length; ++index) {
+                        if (root.app.devices[index].current) {
                             return index;
                         }
                     }
                     return 0;
                 }
-                onActivated: app.selectDevice(currentValue)
+                onActivated: root.app.selectDevice(currentValue)
             }
 
             Button {
                 text: "Refresh"
-                onClicked: app.refresh()
+                onClicked: root.app.refresh()
             }
         }
     }
@@ -122,8 +129,8 @@ ApplicationWindow {
                     Layout.margins: 6
                     wrapMode: Text.WordWrap
                     opacity: 0.55
-                    font.pointSize: Math.round(Qt.application.font.pointSize * 0.85)
-                    text: app.currentDeviceName.length > 0 ? app.currentDeviceName : "No device"
+                    font.pointSize: Math.round(root.app.baseFontPointSize * 0.85)
+                    text: root.app.currentDeviceName.length > 0 ? root.app.currentDeviceName : "No device"
                 }
             }
         }
@@ -138,10 +145,10 @@ ApplicationWindow {
                 Layout.fillHeight: true
                 currentIndex: root.currentPage
 
-                LightingPage {}
-                DevicesPage {}
-                SettingsPage {}
-                AboutPage {}
+                LightingPage { app: root.app }
+                DevicesPage { app: root.app }
+                SettingsPage { app: root.app }
+                AboutPage { app: root.app }
             }
 
             Rectangle {
@@ -161,8 +168,8 @@ ApplicationWindow {
                         Layout.fillWidth: true
                         Layout.leftMargin: 12
                         Layout.rightMargin: 12
-                        kind: app.statusKind
-                        message: app.statusMessage
+                        kind: root.app.statusKind
+                        message: root.app.statusMessage
                         textColor: root.palette.text
                     }
 
@@ -170,11 +177,11 @@ ApplicationWindow {
                         Layout.fillWidth: true
                         Layout.leftMargin: 12
                         Layout.rightMargin: 12
-                        visible: app.statusHint.length > 0
-                        text: app.statusHint
+                        visible: root.app.statusHint.length > 0
+                        text: root.app.statusHint
                         wrapMode: Text.WordWrap
                         opacity: 0.75
-                        font.pointSize: Math.round(Qt.application.font.pointSize * 0.9)
+                        font.pointSize: Math.round(root.app.baseFontPointSize * 0.9)
                     }
                 }
             }

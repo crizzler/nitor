@@ -13,7 +13,7 @@ being written and tested against.
 | Python                      | 3.14.7 (system)                               |
 | PySide6                     | 6.11.2 (installed system-wide)               |
 | pytest / ruff               | `/usr/bin/pytest`; ruff available            |
-| qmllint                     | present (`qt6-declarative`)                  |
+| qmllint                     | Qt 6 at `/usr/lib/qt6/bin/qmllint`; `/usr/bin/qmllint` is Qt 5's |
 | makepkg                     | present                                      |
 
 ## Tooling preflight

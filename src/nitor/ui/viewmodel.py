@@ -56,6 +56,9 @@ STATUS_ERROR = "error"
 #: sent to the hardware is still valid because the value is only ever trimmed, never over-filled.
 MAX_EDITABLE_SLOTS = 8
 
+#: Fallback base font size, used only when the view model is built without a running application.
+DEFAULT_FONT_POINT_SIZE = 10
+
 
 class _BackendWorker(QObject):
     """Runs every hardware operation, on its own thread."""
@@ -670,6 +673,20 @@ class NitorViewModel(QObject):
     @Property(str, notify=changed)
     def version(self) -> str:
         return __version__
+
+    @Property(int, constant=True)
+    def baseFontPointSize(self) -> int:
+        """The system's base font size, so the interface scales typography from one number.
+
+        QML could read ``Qt.application.font`` directly, which is the documented way to follow the
+        system font, but ``qmllint``'s type metadata does not describe that property and reports
+        every use as a missing property. Exposing it here keeps the lint output meaningful.
+        """
+        application = QGuiApplication.instance()
+        if application is None:  # pragma: no cover - only reachable without a GUI
+            return DEFAULT_FONT_POINT_SIZE
+        point_size = application.font().pointSize()
+        return point_size if point_size > 0 else DEFAULT_FONT_POINT_SIZE
 
     @Property(bool, notify=changed)
     def mockMode(self) -> bool:

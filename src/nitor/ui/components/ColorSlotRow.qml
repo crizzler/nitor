@@ -3,6 +3,9 @@
 // A Flow rather than a layout: flows respect the explicit swatch size, which keeps these read as
 // swatches instead of collapsing to hairlines.
 
+// Delegates read the component's own ids, which requires explicit bound component behaviour.
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 

@@ -14,8 +14,10 @@ RowLayout {
     spacing: 8
 
     Rectangle {
-        width: 9
-        height: 9
+        // Sized through the layout rather than with width/height: this item is managed by the
+        // RowLayout, and setting width/height directly on a managed item is undefined behaviour.
+        Layout.preferredWidth: 9
+        Layout.preferredHeight: 9
         radius: 5
         Layout.alignment: Qt.AlignVCenter
         color: {

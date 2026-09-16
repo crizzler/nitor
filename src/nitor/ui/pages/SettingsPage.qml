@@ -8,6 +8,8 @@ import "../components"
 Page {
     id: page
 
+    required property var app
+
     ScrollView {
         id: scroller
         anchors.fill: parent
@@ -31,9 +33,9 @@ Page {
                     Switch {
                         id: loginSwitch
                         text: "Apply my lighting settings when I log in"
-                        enabled: app.autostartSupported
-                        checked: app.applyOnLogin
-                        onToggled: app.setApplyOnLogin(checked)
+                        enabled: page.app.autostartSupported
+                        checked: page.app.applyOnLogin
+                        onToggled: page.app.setApplyOnLogin(checked)
                     }
 
                     Item {
@@ -45,7 +47,7 @@ Page {
                     Layout.fillWidth: true
                     wrapMode: Text.WordWrap
                     opacity: 0.7
-                    visible: !app.autostartSupported
+                    visible: !page.app.autostartSupported
                     text: "This system does not use systemd, so Nitor cannot register a login service. " +
                           "Start it from your desktop's autostart settings instead, with the argument --apply-saved."
                 }
@@ -54,8 +56,8 @@ Page {
                     Layout.fillWidth: true
                     wrapMode: Text.WordWrap
                     opacity: 0.7
-                    visible: app.autostartDetail.length > 0
-                    text: app.autostartDetail
+                    visible: page.app.autostartDetail.length > 0
+                    text: page.app.autostartDetail
                 }
 
                 Label {
@@ -80,14 +82,14 @@ Page {
 
                     Button {
                         text: "Copy diagnostics"
-                        onClicked: app.copyToClipboard(app.diagnosticsReport())
+                        onClicked: page.app.copyToClipboard(page.app.diagnosticsReport())
                     }
 
                     Label {
                         Layout.fillWidth: true
                         opacity: 0.6
-                        font.pointSize: Math.round(Qt.application.font.pointSize * 0.9)
-                        text: "Settings file: " + app.configPath
+                        font.pointSize: Math.round(page.app.baseFontPointSize * 0.9)
+                        text: "Settings file: " + page.app.configPath
                         elide: Text.ElideMiddle
                     }
                 }
@@ -102,8 +104,8 @@ Page {
                         selectByMouse: true
                         wrapMode: TextEdit.NoWrap
                         font.family: "monospace"
-                        font.pointSize: Math.round(Qt.application.font.pointSize * 0.9)
-                        text: app.diagnosticsText
+                        font.pointSize: Math.round(page.app.baseFontPointSize * 0.9)
+                        text: page.app.diagnosticsText
                     }
                 }
             }

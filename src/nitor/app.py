@@ -93,9 +93,15 @@ def create_application(argv: list[str]) -> QGuiApplication:
 
 
 def load_interface(view_model: NitorViewModel) -> QQmlApplicationEngine:
-    """Load the QML interface, raising a clear error if it cannot be built."""
+    """Load the QML interface, raising a clear error if it cannot be built.
+
+    The view model is passed as an *initial property* rather than installed as a context property.
+    Context properties are invisible to ``qmllint`` and to the QML compiler, which turns every use
+    into an "unqualified access" warning and gives up on type checking. As an initial property it is
+    a declared, visible part of the interface.
+    """
     engine = QQmlApplicationEngine()
-    engine.rootContext().setContextProperty("app", view_model)
+    engine.setInitialProperties({"app": view_model})
     engine.load(QUrl.fromLocalFile(str(MAIN_QML)))
     if not engine.rootObjects():
         raise RuntimeError(

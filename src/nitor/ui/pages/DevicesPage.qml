@@ -1,5 +1,8 @@
 // Device information: enough for a bug report, without drowning anyone in USB internals.
 
+// Delegates read the page's own ids, which requires explicit bound component behaviour.
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -7,6 +10,8 @@ import "../components"
 
 Page {
     id: page
+
+    required property var app
 
     ScrollView {
         id: scroller
@@ -21,70 +26,70 @@ Page {
             SectionCard {
                 Layout.fillWidth: true
                 Layout.margins: 20
-                title: app.currentDeviceName.length > 0 ? app.currentDeviceName : "No device selected"
-                subtitle: app.currentDeviceName.length > 0
+                title: page.app.currentDeviceName.length > 0 ? page.app.currentDeviceName : "No device selected"
+                subtitle: page.app.currentDeviceName.length > 0
                           ? "The controller Nitor is talking to"
                           : "Connect a supported controller and choose Check again"
 
                 InfoRow {
                     Layout.fillWidth: true
-                    visible: app.currentDeviceUsbId.length > 0
+                    visible: page.app.currentDeviceUsbId.length > 0
                     label: "USB vendor"
-                    value: app.currentDeviceUsbId.length > 0 ? app.currentDeviceUsbId.substring(0, 4) : ""
+                    value: page.app.currentDeviceUsbId.length > 0 ? page.app.currentDeviceUsbId.substring(0, 4) : ""
                     selectable: true
                 }
 
                 InfoRow {
                     Layout.fillWidth: true
-                    visible: app.currentDeviceUsbId.length > 0
+                    visible: page.app.currentDeviceUsbId.length > 0
                     label: "USB product"
-                    value: app.currentDeviceUsbId.length > 4 ? app.currentDeviceUsbId.substring(5) : ""
+                    value: page.app.currentDeviceUsbId.length > 4 ? page.app.currentDeviceUsbId.substring(5) : ""
                     selectable: true
                 }
 
                 InfoRow {
                     Layout.fillWidth: true
                     label: "Status"
-                    value: !app.backendAvailable ? "Backend not installed"
-                           : app.accessDenied ? "Connected, but access denied"
-                           : app.ready ? "Connected" : "Not initialised"
+                    value: !page.app.backendAvailable ? "Backend not installed"
+                           : page.app.accessDenied ? "Connected, but access denied"
+                           : page.app.ready ? "Connected" : "Not initialised"
                 }
 
                 InfoRow {
                     Layout.fillWidth: true
                     label: "Backend"
-                    value: app.backendSummary
+                    value: page.app.backendSummary
                 }
 
                 InfoRow {
                     Layout.fillWidth: true
                     label: "Driver"
-                    value: app.currentDeviceDriver
+                    value: page.app.currentDeviceDriver
                 }
 
                 InfoRow {
                     Layout.fillWidth: true
                     label: "Firmware"
-                    value: app.currentDeviceFirmware
+                    value: page.app.currentDeviceFirmware
                 }
 
                 InfoRow {
                     Layout.fillWidth: true
                     label: "Device path"
-                    value: app.currentDeviceAddress
+                    value: page.app.currentDeviceAddress
                     selectable: true
                 }
 
                 InfoRow {
                     Layout.fillWidth: true
                     label: "Channels"
-                    value: app.channels.length.toString()
+                    value: page.app.channels.length.toString()
                 }
 
                 InfoRow {
                     Layout.fillWidth: true
                     label: "Permissions"
-                    value: app.accessDenied ? "Denied" : "OK"
+                    value: page.app.accessDenied ? "Denied" : "OK"
                 }
 
                 RowLayout {
@@ -92,7 +97,7 @@ Page {
 
                     Button {
                         text: "Check again"
-                        onClicked: app.refresh()
+                        onClicked: page.app.refresh()
                     }
                 }
             }
@@ -106,7 +111,7 @@ Page {
                 subtitle: "Everything Nitor found on this system"
 
                 Repeater {
-                    model: app.devices
+                    model: page.app.devices
 
                     delegate: Pane {
                         id: deviceRow
@@ -153,7 +158,7 @@ Page {
                             Button {
                                 text: deviceRow.modelData.current ? "Selected" : "Select"
                                 enabled: deviceRow.modelData.lightingSupported && !deviceRow.modelData.current
-                                onClicked: app.selectDevice(deviceRow.modelData.key)
+                                onClicked: page.app.selectDevice(deviceRow.modelData.key)
                             }
                         }
                     }
@@ -161,7 +166,7 @@ Page {
 
                 Label {
                     Layout.fillWidth: true
-                    visible: app.devices.length === 0
+                    visible: page.app.devices.length === 0
                     opacity: 0.7
                     wrapMode: Text.WordWrap
                     text: "No supported NZXT device was found. Check that it appears in lsusb and that " +

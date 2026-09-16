@@ -28,10 +28,13 @@ Pane {
             Layout.fillWidth: true
             spacing: 2
 
+            // Sized from the card's own resolved font, which follows the system font. Reading it
+            // here keeps this component reusable: it needs no knowledge of the application's
+            // view model, and it adapts to whatever font context it is placed in.
             Label {
                 text: card.title
                 font.bold: true
-                font.pointSize: Math.round(Qt.application.font.pointSize * 1.15)
+                font.pointSize: Math.round(card.font.pointSize * 1.15)
             }
 
             Label {
@@ -40,7 +43,7 @@ Pane {
                 text: card.subtitle
                 wrapMode: Text.WordWrap
                 opacity: 0.65
-                font.pointSize: Math.round(Qt.application.font.pointSize * 0.95)
+                font.pointSize: Math.round(card.font.pointSize * 0.95)
             }
         }
 

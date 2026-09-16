@@ -75,7 +75,7 @@ Item {
             for (let angle = 0; angle < 360; angle += 1) {
                 const start = (angle - 0.6) * Math.PI / 180;
                 const end = (angle + 0.6) * Math.PI / 180;
-                const edge = hsvToRgb(angle, 100, 100);
+                const edge = wheel.hsvToRgb(angle, 100, 100);
                 const gradient = context.createLinearGradient(
                     centreX, centreY,
                     centreX + Math.cos(start) * radius, centreY + Math.sin(start) * radius);
@@ -106,8 +106,10 @@ Item {
 
     // Marker for the current hue and saturation.
     Rectangle {
-        x: canvas.width / 2 + Math.cos(hue * Math.PI / 180) * (Math.min(canvas.width, canvas.height) / 2) * (saturation / 100) - width / 2
-        y: canvas.height / 2 + Math.sin(hue * Math.PI / 180) * (Math.min(canvas.width, canvas.height) / 2) * (saturation / 100) - height / 2
+        readonly property real markerRadius: (Math.min(canvas.width, canvas.height) / 2) * (wheel.saturation / 100)
+
+        x: canvas.width / 2 + Math.cos(wheel.hue * Math.PI / 180) * markerRadius - width / 2
+        y: canvas.height / 2 + Math.sin(wheel.hue * Math.PI / 180) * markerRadius - height / 2
         width: 16
         height: 16
         radius: 8

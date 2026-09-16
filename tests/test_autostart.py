@@ -206,15 +206,31 @@ def test_a_source_checkout_gets_a_pythonpath_line() -> None:
         assert Path(value).name == "src"
 
 
-def test_a_checkout_path_with_spaces_is_quoted() -> None:
-    """systemd splits unquoted values on whitespace, which silently breaks a checkout path."""
-    environment = default_environment()
-    assert isinstance(environment, list)
-    assert environment, "this checkout should need a PYTHONPATH line"
-    for line in environment:
-        value = line.split("=", 2)[2]
-        assert value.startswith('"') and value.endswith('"'), value
-        assert " " in value
+def test_a_checkout_path_with_spaces_is_quoted(monkeypatch: pytest.MonkeyPatch) -> None:
+    """systemd splits unquoted values on whitespace, which silently breaks a checkout path.
+
+    Driven from a synthetic path rather than the real one: whether this checkout happens to live
+    under a path with spaces differs between machines, and that is not what is under test.
+    """
+    import nitor
+
+    source = Path("/home/someone/Other Projects/nitor/src")
+    monkeypatch.setattr(nitor, "__file__", str(source / "nitor" / "__init__.py"))
+
+    assert default_environment() == [
+        'Environment=PYTHONPATH="/home/someone/Other Projects/nitor/src"'
+    ]
+
+
+def test_a_path_with_spaces_survives_rendering(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The quoted value must reach the unit intact, quotes and all."""
+    import nitor
+
+    source = Path("/home/someone/Other Projects/nitor/src")
+    monkeypatch.setattr(nitor, "__file__", str(source / "nitor" / "__init__.py"))
+
+    text = render_unit(TEMPLATE, exec_start="/usr/bin/nitor", environment=default_environment())
+    assert 'Environment=PYTHONPATH="/home/someone/Other Projects/nitor/src"' in text
 
 
 def test_the_default_command_is_quoted_when_the_interpreter_path_has_spaces(
