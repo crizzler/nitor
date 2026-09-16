@@ -131,6 +131,7 @@ class Device:
     serial: str | None = None
     profile: DeviceProfile | None = None
     channels: tuple[ChannelSpec, ...] = ()
+    firmware: str | None = None
 
     @property
     def usb_id(self) -> str:
@@ -138,7 +139,18 @@ class Device:
 
     @property
     def is_supported(self) -> bool:
+        """Whether this project knows the model at all."""
         return self.profile is not None
+
+    @property
+    def lighting_supported(self) -> bool:
+        """Whether this project can actually drive the device's LEDs.
+
+        Knowing a model and being able to control it are different things: liquidctl supports
+        several NZXT controllers for fan monitoring while its lighting protocol is still
+        unimplemented upstream.
+        """
+        return self.profile is not None and self.profile.controllable
 
     @property
     def display_name(self) -> str:
@@ -182,9 +194,13 @@ class Device:
             per_led_control=profile.per_led_control,
         )
 
-    def with_channels(self, channels: tuple[ChannelSpec, ...]) -> Device:
+    def with_channels(
+        self,
+        channels: tuple[ChannelSpec, ...],
+        firmware: str | None = None,
+    ) -> Device:
         """Return a copy of this device with the probed channel details attached."""
-        return replace(self, channels=channels)
+        return replace(self, channels=channels, firmware=firmware or self.firmware)
 
 
 def channel_label(channel_id: str) -> str:
@@ -278,7 +294,9 @@ class LightingState:
         colors = self.effective_colors()
         if not colors:
             return ()
-        return tuple(color if color.to_rgb_tuple() != (0, 0, 0) else Color(24, 24, 24) for color in colors)
+        return tuple(
+            color if color.to_rgb_tuple() != (0, 0, 0) else Color(24, 24, 24) for color in colors
+        )
 
     def normalized(self, capabilities: DeviceCapabilities) -> LightingState:
         """Return a state that is valid for ``capabilities``.
@@ -305,7 +323,7 @@ class LightingState:
                 self.speed,
                 self.direction,
             )
-        except Exception:  # noqa: BLE001 - fall back to the safest valid state
+        except Exception:
             validated = validate_request(capabilities.family, DEFAULT_EFFECT, (self.primary_color,))
 
         return replace(
@@ -338,7 +356,7 @@ class LightingState:
             for entry in raw_colors:
                 try:
                     colors.append(Color.from_hex(str(entry)))
-                except Exception:  # noqa: BLE001, S112 - a bad colour must not break start-up
+                except Exception:
                     continue
 
         brightness = data.get("brightness", MAX_BRIGHTNESS)
@@ -372,4 +390,5 @@ class DeviceDiscovery:
 
     @property
     def supported_devices(self) -> list[Device]:
-        return [device for device in self.devices if device.is_supported]
+        """Devices whose lighting this project can drive."""
+        return [device for device in self.devices if device.lighting_supported]

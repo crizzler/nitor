@@ -1,0 +1,13 @@
+[Unit]
+Description=Apply saved NZXT lighting settings
+Documentation=https://github.com/crizzler/nitor
+After=graphical-session.target
+
+[Service]
+Type=oneshot
+ExecStart=@@EXEC_START@@ --apply-saved
+@@ENVIRONMENT@@
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=default.target

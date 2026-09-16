@@ -63,7 +63,9 @@ class Color:
         saturation = _clamp(float(saturation), 0.0, MAX_PERCENT) / MAX_PERCENT
         value = _clamp(float(value), 0.0, MAX_PERCENT) / MAX_PERCENT
         red, green, blue = colorsys.hsv_to_rgb(hue / MAX_HUE, saturation, value)
-        return cls(round(red * MAX_COMPONENT), round(green * MAX_COMPONENT), round(blue * MAX_COMPONENT))
+        return cls(
+            round(red * MAX_COMPONENT), round(green * MAX_COMPONENT), round(blue * MAX_COMPONENT)
+        )
 
     @classmethod
     def from_name(cls, name: str) -> Color:

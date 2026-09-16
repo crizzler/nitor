@@ -14,6 +14,7 @@ from .effects import (
     EFFECTS_BY_FAMILY,
     FAMILY_HUE2,
     FAMILY_KRAKEN,
+    OFF_EFFECT,
     SPEEDS,
     EffectSpec,
     ValidatedEffect,
@@ -22,6 +23,7 @@ from .effects import (
     validate_request,
 )
 from .errors import (
+    AutostartError,
     BackendMissingError,
     DeviceNotFoundError,
     EffectError,
@@ -58,9 +60,11 @@ __all__ = [
     "MAX_BRIGHTNESS",
     "MIN_BRIGHTNESS",
     "NZXT_VENDOR_ID",
+    "OFF_EFFECT",
     "PRESETS",
     "SPEEDS",
     "WHITE",
+    "AutostartError",
     "BackendMissingError",
     "ChannelSpec",
     "Color",

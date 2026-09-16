@@ -48,6 +48,10 @@ class HardwareError(NitorError):
     """The backend failed for a reason we could not classify more precisely."""
 
 
+class AutostartError(NitorError):
+    """Managing the per-user startup service failed."""
+
+
 class SafetyViolationError(NitorError):
     """A command outside the lighting-only safety boundary was attempted.
 
