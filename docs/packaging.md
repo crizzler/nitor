@@ -59,13 +59,8 @@ Tools that audit PKGBUILDs will flag two things here, both correctly and both un
   pushed
 - the VCS package's `sha256sums=('SKIP')`, because a moving branch cannot be checksummed
 
-Neither is a defect, but a scanner may refuse to build. Two ways around it:
-
-1. Build with the real makepkg directly, bypassing a wrapper: `/usr/bin/makepkg -si`. Some scanners
-   install themselves as `makepkg` earlier in `PATH` and can fail with generic "inspection did not
-   complete" messages, which are not findings about this package.
-2. Install without building a package at all, using a virtual environment that borrows the system
-   Qt:
+Neither is a defect, but a scanner may refuse to build. In that case install without building a
+package, using a virtual environment that borrows the system Qt:
 
 ```bash
 git clone https://github.com/crizzler/nitor

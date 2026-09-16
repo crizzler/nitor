@@ -7,7 +7,7 @@ from dataclasses import replace
 from nitor.backend.liquidctl_cli import LiquidctlBackend
 from nitor.backend.mock import MockBackend, mock_devices
 from nitor.backend.registry import MODE_MOCK, create_backend
-from nitor.domain import Color, Device, LightingState, NZXT_VENDOR_ID, lookup_profile
+from nitor.domain import NZXT_VENDOR_ID, Color, Device, LightingState, lookup_profile
 from nitor.services.settings import Settings
 from nitor.services.startup import EXIT_BACKEND_MISSING, EXIT_FAILED, EXIT_OK, apply_saved
 

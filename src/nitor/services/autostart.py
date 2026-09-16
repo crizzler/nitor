@@ -91,6 +91,19 @@ def default_unit_directory() -> Path:
     return root / "systemd" / "user"
 
 
+def _quote_for_systemd(value: str) -> str:
+    """Quote a unit value that systemd would otherwise split on whitespace.
+
+    systemd parses both ``ExecStart`` and ``Environment`` values as shell-like words, so an
+    unquoted path such as ``/home/someone/Other Projects/nitor/src`` is split and the tail is
+    rejected. Values without whitespace are left alone so the common case stays readable.
+    """
+    if value and not any(character.isspace() for character in value) and '"' not in value:
+        return value
+    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+    return f'"{escaped}"'
+
+
 def default_exec_start() -> str:
     """How the service should start Nitor.
 
@@ -99,8 +112,8 @@ def default_exec_start() -> str:
     """
     installed = shutil.which("nitor")
     if installed:
-        return installed
-    return f"{sys.executable} -m nitor"
+        return _quote_for_systemd(installed)
+    return f"{_quote_for_systemd(sys.executable)} -m nitor"
 
 
 def default_environment() -> list[str]:
@@ -111,7 +124,7 @@ def default_environment() -> list[str]:
     source_directory = package_directory.parent
     if source_directory.name != "src":
         return []
-    return [f"Environment=PYTHONPATH={source_directory}"]
+    return [f"Environment=PYTHONPATH={_quote_for_systemd(str(source_directory))}"]
 
 
 def load_unit_template() -> str:

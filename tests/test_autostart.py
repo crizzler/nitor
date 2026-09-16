@@ -13,6 +13,7 @@ from nitor.services.autostart import (
     EXEC_PLACEHOLDER,
     AutostartManager,
     CommandOutcome,
+    _quote_for_systemd,
     default_environment,
     default_exec_start,
     load_unit_template,
@@ -201,4 +202,30 @@ def test_a_source_checkout_gets_a_pythonpath_line() -> None:
     assert isinstance(environment, list)
     for line in environment:
         assert line.startswith("Environment=PYTHONPATH=")
-        assert Path(line.split("=", 2)[2]).name == "src"
+        value = line.split("=", 2)[2].strip('"')
+        assert Path(value).name == "src"
+
+
+def test_a_checkout_path_with_spaces_is_quoted() -> None:
+    """systemd splits unquoted values on whitespace, which silently breaks a checkout path."""
+    environment = default_environment()
+    assert isinstance(environment, list)
+    assert environment, "this checkout should need a PYTHONPATH line"
+    for line in environment:
+        value = line.split("=", 2)[2]
+        assert value.startswith('"') and value.endswith('"'), value
+        assert " " in value
+
+
+def test_the_default_command_is_quoted_when_the_interpreter_path_has_spaces(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("nitor.services.autostart.shutil.which", lambda _name: None)
+    monkeypatch.setattr("nitor.services.autostart.sys.executable", "/opt/my tools/bin/python3")
+    assert default_exec_start() == '"/opt/my tools/bin/python3" -m nitor'
+
+
+def test_quoting_leaves_ordinary_values_alone() -> None:
+    """The common case should stay readable rather than being needlessly quoted."""
+    assert _quote_for_systemd("/usr/bin/nitor") == "/usr/bin/nitor"
+    assert _quote_for_systemd("/home/some one/src") == '"/home/some one/src"'
