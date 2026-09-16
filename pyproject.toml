@@ -1,0 +1,68 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nitor"
+version = "0.1.0"
+description = "Simple, reliable control of NZXT RGB/LED lighting on Linux, without NZXT CAM"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [{ name = "Nitor contributors" }]
+keywords = ["nzxt", "rgb", "lighting", "kde", "plasma", "qt", "liquidctl", "linux"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: X11 Applications :: Qt",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Topic :: Desktop Environment :: KDE",
+    "Topic :: System :: Hardware",
+]
+dependencies = ["PySide6>=6.6"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[project.urls]
+Homepage = "https://github.com/crizzler/nitor"
+Repository = "https://github.com/crizzler/nitor"
+Issues = "https://github.com/crizzler/nitor/issues"
+Changelog = "https://github.com/crizzler/nitor/blob/main/CHANGELOG.md"
+
+[project.scripts]
+nitor = "nitor.cli:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+nitor = ["assets/*.svg", "assets/icons/**/*.png", "data/*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+extend-exclude = ["build", "dist"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "RUF"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["nitor"]
+
+[tool.ruff.format]
+quote-style = "double"
+docstring-code-format = true
